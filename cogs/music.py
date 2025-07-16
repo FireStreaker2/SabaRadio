@@ -1,4 +1,5 @@
-import config
+import util.config
+import util.embeds
 import discord
 from discord.ext import commands
 from mutagen.mp3 import MP3
@@ -38,7 +39,10 @@ class Music(commands.Cog):
     async def start(self, ctx: discord.ApplicationContext):
         if not ctx.author.voice or not ctx.author.voice.channel:
             return await ctx.respond(
-                "You need to be in a voice channel first!", ephemeral=True
+                embed=util.embeds.error_embed(
+                    "You need to be in a voice channel first!"
+                ),
+                ephemeral=True,
             )
 
         voice_channel = ctx.author.voice.channel
@@ -47,7 +51,7 @@ class Music(commands.Cog):
 
             if voice_client.channel == voice_channel:
                 return await ctx.respond(
-                    "I'm already in your voice channel!",
+                    embed=util.embeds.error_embed("I'm already in your voice channel!"),
                     ephemeral=True,
                 )
 
@@ -58,13 +62,16 @@ class Music(commands.Cog):
             self.vcs[ctx.guild.id] = voice_client
 
         files = [
-            os.path.join(config.music, f)
-            for f in os.listdir(config.music)
+            os.path.join(util.config.music, f)
+            for f in os.listdir(util.config.music)
             if f.endswith(".mp3")
         ]
         if not files:
             return await ctx.respond(
-                "No MP3 files found in the music folder!", ephemeral=True
+                embed=util.embeds.error_embed(
+                    "No MP3 files found in the music folder!"
+                ),
+                ephemeral=True,
             )
 
         shuffle(files)
@@ -75,7 +82,11 @@ class Music(commands.Cog):
 
         asyncio.create_task(self.play(ctx.guild.id))
 
-        await ctx.respond(f"Joined `{voice_channel.name}` and started playing music!")
+        await ctx.respond(
+            embed=util.embeds.success_embed(
+                f"Joined `{voice_channel.name}` and started playing music!"
+            )
+        )
 
     async def play(self, guild):
         voice_client = self.vcs[guild]
@@ -108,7 +119,10 @@ class Music(commands.Cog):
         start = self.start.get(ctx.guild.id)
 
         if not track or not start:
-            return await ctx.respond("Nothing currently playing!", ephemeral=True)
+            return await ctx.respond(
+                embed=util.embeds.error_embed("Nothing currently playing!"),
+                ephemeral=True,
+            )
 
         try:
             audio = MP3(track)
@@ -122,32 +136,53 @@ class Music(commands.Cog):
         progress = bar(elapsed, duration)
         file = os.path.basename(track)
 
-        await ctx.respond(f"Now playing: **{file}**\nProgress: {progress}")
+        await ctx.respond(
+            embed=util.embeds.success_embed(f"Now playing: **{file}**").add_field(
+                name="Progress",
+                value=progress,
+            )
+        )
 
     @discord.slash_command(name="queue", description="View current queue of SabaRadio")
     async def queue(self, ctx: discord.ApplicationContext):
         queue = self.queues.get(ctx.guild.id)
 
         if not queue or len(queue) == 0:
-            return await ctx.respond("The queue is currently empty.", ephemeral=True)
+            return await ctx.respond(
+                embed=util.embeds.error_embed("The queue is currently empty."),
+                ephemeral=True,
+            )
 
         filenames = [os.path.basename(f) for f in queue]
 
         await ctx.respond(
-            "**Current Queue:**\n"
-            + "\n".join(f"{i+1}. {name}" for i, name in enumerate(filenames))
+            embed=util.embeds.success_embed("").add_field(
+                name="Current Queue",
+                value="\n".join(
+                    (
+                        f"{i+1}. **{name}**"
+                        if name == os.path.basename(self.current.get(ctx.guild.id, ""))
+                        else f"{i+1}. {name}"
+                    )
+                    for i, name in enumerate(filenames)
+                ),
+            )
         )
 
     @discord.slash_command(name="volume", description="Change volume of SabaRadio")
     async def volume(self, ctx: discord.ApplicationContext, volume: int):
         if not ctx.voice_client:
             return await ctx.respond(
-                "You need to be in a voice channel first!", ephemeral=True
+                embed=util.embeds.error_embed(
+                    "You need to be in a voice channel first!"
+                ),
+                ephemeral=True,
             )
 
         if not (1 <= volume <= 200):
             return await ctx.respond(
-                "Please enter a value within `1-200`", ephemeral=True
+                embed=util.embeds.error_embed("Please enter a value within `1-200`"),
+                ephemeral=True,
             )
 
         if isinstance(ctx.voice_client.source, discord.PCMVolumeTransformer):
@@ -156,18 +191,30 @@ class Music(commands.Cog):
             ctx.voice_client.source.volume = new_volume
             self.volumes[ctx.guild.id] = new_volume
 
-            await ctx.respond(f"Volume set to {new_volume * 100.0}%")
+            await ctx.respond(
+                embed=util.embeds.success_embed(f"Volume set to {new_volume * 100.0}%")
+            )
         else:
-            await ctx.respond("No audio playing!")
+            return await ctx.respond(
+                embed=util.embeds.error_embed("No audio playing!"),
+                ephemeral=True,
+            )
 
     @discord.slash_command(name="disconnect", description="Disconnect SabaRadio")
     async def disconnect(self, ctx: discord.ApplicationContext):
         if not ctx.voice_client:
             return await ctx.respond(
-                "You need to be in a voice channel first!", ephemeral=True
+                embed=util.embeds.error_embed(
+                    "You need to be in a voice channel first!"
+                ),
+                ephemeral=True,
             )
 
-        await ctx.respond(f"Disconnected from `{ctx.author.voice.channel}`!")
+        await ctx.respond(
+            embed=util.embeds.success_embed(
+                f"Disconnected from `{ctx.author.voice.channel}`!"
+            )
+        )
 
         self.vcs.pop(ctx.guild.id, None)
         self.queues.pop(ctx.guild.id, None)

@@ -4,10 +4,11 @@
 
 # TODO
 
-- [ ] embeds
-- [ ] emojis
+- [x] embeds
+- [x] emojis
 - [ ] standardized errors (stored in a file/config)
 - [ ] per server config
 - [x] general cog for help/about commands
 - [ ] readme
-- [ ] proper ephemeral responses
+- [x] proper ephemeral responses
+- [ ] sigterm/sigkill handling

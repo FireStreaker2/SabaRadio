@@ -1,4 +1,4 @@
-import config
+import util.config
 import discord
 from discord.ext import commands
 from os import listdir
@@ -26,4 +26,4 @@ async def on_command_error(ctx, error):
     await ctx.send(error)
 
 
-bot.run(config.TOKEN)
+bot.run(util.config.TOKEN)
