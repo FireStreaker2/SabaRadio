@@ -1,0 +1,7 @@
+py-cord[voice]
+asyncio
+python-dotenv
+aiohttp
+audioop-lts
+ffmpeg
+mutagen
