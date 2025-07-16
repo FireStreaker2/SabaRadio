@@ -8,5 +8,6 @@
 - [ ] emojis
 - [ ] standardized errors (stored in a file/config)
 - [ ] per server config
-- [ ] general cog for help/about commands
+- [x] general cog for help/about commands
 - [ ] readme
+- [ ] proper ephemeral responses

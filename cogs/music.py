@@ -34,10 +34,6 @@ class Music(commands.Cog):
             self.current.pop(guild, None)
             self.start.pop(guild, None)
 
-            print(
-                f"Bot manually disconnected from {before.channel.name} in guild {guild}"
-            )
-
     @discord.slash_command(name="start", description="Join vc and start playing music")
     async def start(self, ctx: discord.ApplicationContext):
         if not ctx.author.voice or not ctx.author.voice.channel:
