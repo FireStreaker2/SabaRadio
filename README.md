@@ -12,11 +12,11 @@
 
 # About
 
-SabaRadio is a 24/7 music bot for [Sameko Saba's](https://www.youtube.com/@samekosaba) karaoke streams! It utilizes [pycord](https://github.com/Pycord-Development/pycord) to provide the
+SabaRadio is a 24/7 music bot for [Sameko Saba's](https://www.youtube.com/@samekosaba) karaoke streams! It utilizes [pycord](https://github.com/Pycord-Development/pycord) to provide Saba's karaoke songs to Discord users 24/7.
 
 # Usage
 
-SabaRadio is currently able to be publicly invited from the [following link](https://sabaradio.firestreaker2.gq/), or it can be [selfhosted](https://github.com/FireStreaker2/SabaRadio?tab=readme-ov-file#selfhosting).
+SabaRadio is currently able to be publicly invited from the [following link](https://sabaradio.firestreaker2.gq/), or it can be [selfhosted](https://github.com/FireStreaker2/SabaRadio?tab=readme-ov-file#setup).
 
 ## Development
 
@@ -54,7 +54,7 @@ $ python main.py
 
 ## Configuration
 
-SabaRadio is very easy to configure in the case of selfhosting, and even less maintence required.
+SabaRadio is very easy to configure in the case of selfhosting, and even less for simple maintence.
 
 ### Environment Variables
 
