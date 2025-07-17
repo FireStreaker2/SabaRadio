@@ -16,7 +16,7 @@ SabaRadio is a 24/7 music bot for [Sameko Saba's](https://www.youtube.com/@samek
 
 # Usage
 
-SabaRadio is currently able to be publicly invited from the [following link](https://sabaradio.firestreaker2.gq/), or it can be [selfhosted](https://github.com/FireStreaker2/SabaRadio?tab=readme-ov-file#setup).
+SabaRadio is currently able to be publicly invited from the [following link](https://sabaradio.firestreaker2.gq/invite), or it can be [selfhosted](https://github.com/FireStreaker2/SabaRadio?tab=readme-ov-file#setup).
 
 ## Development
 

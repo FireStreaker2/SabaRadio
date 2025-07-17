@@ -1,4 +1,4 @@
-def bar(current, total):
+def bar(current: int, total: int):
     ratio = current / total
     position = int(ratio * 10)
 

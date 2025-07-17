@@ -3,10 +3,12 @@ import discord
 from util.emojis import emoji
 from util.images import images
 
+color = 0x05B0FF
+
 
 def error_embed(message: str):
     return (
-        discord.Embed(title="Error", description="An error occurred!", color=0x05B0FF)
+        discord.Embed(title="Error", description="An error occurred!", color=color)
         .add_field(
             name="Summary",
             value=f"{message} {emoji('kani_cry')}",
@@ -24,7 +26,7 @@ def success_embed(title: str, message: str):
         discord.Embed(
             title=title,
             description=f"{message} {emoji('sabastars')}",
-            color=0x05B0FF,
+            color=color,
         )
         .set_footer(
             text="SabaRadio",
@@ -39,7 +41,7 @@ def help_embed(commands: str):
         discord.Embed(
             title="Help",
             description=f"Help for SabaRadio {emoji('sabapray')}",
-            color=0x05B0FF,
+            color=color,
         )
         .add_field(
             name="Commands",
@@ -58,7 +60,7 @@ def about_embed():
         discord.Embed(
             title="About",
             description=f"About SabaRadio {emoji('Saba_Hug')}",
-            color=0x05B0FF,
+            color=color,
         )
         .add_field(
             name="Summary",
@@ -88,7 +90,7 @@ def stats_embed(servers: int, ping: int):
         discord.Embed(
             title="Statistics",
             description=f"SabaRadio Bot Statistics {emoji('Saba_Blush')}",
-            color=0x05B0FF,
+            color=color,
         )
         .add_field(
             name="Server Count",
@@ -98,6 +100,26 @@ def stats_embed(servers: int, ping: int):
         .add_field(
             name="Ping",
             value=f"{ping}ms",
+            inline=False,
+        )
+        .set_footer(
+            text="SabaRadio",
+            icon_url=images["pfp"],
+        )
+        .set_thumbnail(url=images["pfp"])
+    )
+
+
+def join_embed():
+    return (
+        discord.Embed(
+            title="yoho!",
+            description=f"hewwo pwincess~ do you want to see my papeh boat?",
+            color=color,
+        )
+        .add_field(
+            name="Help",
+            value=f"If you need help, you can run the `/help` command!",
             inline=False,
         )
         .set_footer(

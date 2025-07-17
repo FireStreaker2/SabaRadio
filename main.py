@@ -23,7 +23,16 @@ async def on_ready():
 
 
 @bot.event
-async def on_command_error(ctx, error):
+async def on_guild_join(guild: discord.Guild):
+    try:
+        await guild.system_channel.send(embed=util.embeds.join_embed())
+
+    except Exception as error:
+        print(f"Unable to send welcome message: {error}")
+
+
+@bot.event
+async def on_application_command_error(ctx, error: discord.DiscordException):
     return await ctx.respond(
         embed=util.embeds.error_embed(error),
         ephemeral=True,

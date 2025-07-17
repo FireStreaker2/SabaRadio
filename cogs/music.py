@@ -5,8 +5,8 @@ import discord
 from discord.ext import commands
 from mutagen.mp3 import MP3
 from random import shuffle
+from time import time
 import asyncio
-import time
 import os
 
 
@@ -19,21 +19,52 @@ class Music(commands.Cog):
         self.volumes = {}
         self.current = {}
         self.start = {}
+        self.pauses = {}
+        self.elapsed = {}
 
     @commands.Cog.listener()
-    async def on_voice_state_update(self, member, before, after):
-        if member.id != self.bot.user.id:
+    async def on_voice_state_update(
+        self,
+        member: discord.Member,
+        before: discord.VoiceState,
+        after: discord.VoiceState,
+    ):
+        if member.id == self.bot.user.id:
+            if before.channel is not None and after.channel is None:
+                guild = before.channel.guild.id
+
+                self.vcs.pop(guild, None)
+                self.queues.pop(guild, None)
+                self.is_playing.pop(guild, None)
+                self.volumes.pop(guild, None)
+                self.current.pop(guild, None)
+                self.start.pop(guild, None)
+                self.pauses.pop(guild, None)
+                self.elapsed.pop(guild, None)
+
             return
 
-        if before.channel is not None and after.channel is None:
-            guild = before.channel.guild.id
+        for guild, voice_client in self.vcs.items():
+            if not voice_client or not voice_client.is_connected():
+                continue
 
-            self.vcs.pop(guild, None)
-            self.queues.pop(guild, None)
-            self.is_playing.pop(guild, None)
-            self.volumes.pop(guild, None)
-            self.current.pop(guild, None)
-            self.start.pop(guild, None)
+            vc = voice_client.channel
+            if before.channel == vc or after.channel == vc:
+                if (
+                    len([m for m in vc.members if not m.bot]) == 0
+                    and voice_client.is_playing()
+                ):
+                    voice_client.pause()
+
+                    now = time()
+                    self.pauses[vc.guild.id] = now
+                    self.elapsed[vc.guild.id] += now - self.start[vc.guild.id]
+
+                elif voice_client.is_paused():
+                    voice_client.resume()
+
+                    self.start[vc.guild.id] = time()
+                    self.pauses[vc.guild.id] = None
 
     @discord.slash_command(name="start", description="Join vc and start playing music")
     async def start(self, ctx: discord.ApplicationContext):
@@ -92,7 +123,7 @@ class Music(commands.Cog):
             )
         )
 
-    async def play(self, guild):
+    async def play(self, guild: int):
         voice_client = self.vcs[guild]
         queue = self.queues[guild]
 
@@ -104,7 +135,9 @@ class Music(commands.Cog):
                 volume = self.volumes.get(guild, 1.0)
 
                 self.current[guild] = track
-                self.start[guild] = time.time()
+                self.elapsed[guild] = 0.0
+                self.pauses[guild] = None
+                self.start[guild] = time()
 
                 voice_client.play(
                     discord.PCMVolumeTransformer(
@@ -134,10 +167,14 @@ class Music(commands.Cog):
         except Exception as e:
             return await ctx.respond(e)
 
-        elapsed = time.time() - start
-        elapsed = min(elapsed, duration)
-
-        progress = util.helpers.bar(elapsed, duration)
+        progress = util.helpers.bar(
+            (
+                self.elapsed[ctx.guild.id]
+                if self.pauses[ctx.guild.id]
+                else (time() - self.start[ctx.guild.id]) + self.elapsed[ctx.guild.id]
+            ),
+            duration,
+        )
         file = os.path.basename(track)
 
         await ctx.respond(
@@ -222,21 +259,22 @@ class Music(commands.Cog):
                 ephemeral=True,
             )
 
-        await ctx.respond(
-            embed=util.embeds.success_embed(
-                "Success", f"Disconnected from <#{ctx.author.voice.channel.id}>!"
-            )
-        )
-
         self.vcs.pop(ctx.guild.id, None)
         self.queues.pop(ctx.guild.id, None)
         self.is_playing.pop(ctx.guild.id, None)
         self.volumes.pop(ctx.guild.id, None)
         self.current.pop(ctx.guild.id, None)
         self.start.pop(ctx.guild.id, None)
+        self.pauses.pop(ctx.guild.id, None)
+        self.elapsed.pop(ctx.guild.id, None)
 
+        await ctx.respond(
+            embed=util.embeds.success_embed(
+                "Success", f"Disconnected from <#{ctx.voice_client.channel.id}>!"
+            )
+        )
         await ctx.voice_client.disconnect()
 
 
-def setup(bot):
+def setup(bot: commands.Bot):
     bot.add_cog(Music(bot))
