@@ -9,7 +9,7 @@ def error_embed(message: str):
         discord.Embed(title="Error", description="An error occurred!", color=0x05B0FF)
         .add_field(
             name="Summary",
-            value=f"{message} {emoji("kani_cry")}",
+            value=f"{message} {emoji('kani_cry')}",
         )
         .set_footer(
             text="SabaRadio",
@@ -23,7 +23,7 @@ def success_embed(title: str, message: str):
     return (
         discord.Embed(
             title=title,
-            description=f"{message} {emoji("sabastars")}",
+            description=f"{message} {emoji('sabastars')}",
             color=0x05B0FF,
         )
         .set_footer(
@@ -38,7 +38,7 @@ def help_embed(commands: str):
     return (
         discord.Embed(
             title="Help",
-            description=f"Help for SabaRadio {emoji("sabapray")}",
+            description=f"Help for SabaRadio {emoji('sabapray')}",
             color=0x05B0FF,
         )
         .add_field(
@@ -57,7 +57,7 @@ def about_embed():
     return (
         discord.Embed(
             title="About",
-            description=f"About SabaRadio {emoji("Saba_Hug")}",
+            description=f"About SabaRadio {emoji('Saba_Hug')}",
             color=0x05B0FF,
         )
         .add_field(
@@ -87,7 +87,7 @@ def stats_embed(servers: int, ping: int):
     return (
         discord.Embed(
             title="Statistics",
-            description=f"SabaRadio Bot Statistics {emoji("Saba_Blush")}",
+            description=f"SabaRadio Bot Statistics {emoji('Saba_Blush')}",
             color=0x05B0FF,
         )
         .add_field(
