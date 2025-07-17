@@ -1,4 +1,5 @@
 import util.config
+import util.embeds
 import discord
 from discord.ext import commands
 from os import listdir
@@ -23,7 +24,10 @@ async def on_ready():
 
 @bot.event
 async def on_command_error(ctx, error):
-    await ctx.send(error)
+    return await ctx.respond(
+        embed=util.embeds.error_embed(error),
+        ephemeral=True,
+    )
 
 
 bot.run(util.config.TOKEN)

@@ -1,17 +1,14 @@
 import util.config
 import discord
-from util.images import images
 from util.emojis import emoji
+from util.images import images
 
 
 def error_embed(message: str):
     return (
-        discord.Embed(
-            title="Error",
-            description="An error occurred!",
-        )
+        discord.Embed(title="Error", description="An error occurred!", color=0x05B0FF)
         .add_field(
-            name="error",
+            name="Summary",
             value=f"{message} {emoji("kani_cry")}",
         )
         .set_footer(
@@ -22,11 +19,12 @@ def error_embed(message: str):
     )
 
 
-def success_embed(message: str):
+def success_embed(title: str, message: str):
     return (
         discord.Embed(
-            title="Success",
+            title=title,
             description=f"{message} {emoji("sabastars")}",
+            color=0x05B0FF,
         )
         .set_footer(
             text="SabaRadio",
@@ -41,6 +39,7 @@ def help_embed(commands: str):
         discord.Embed(
             title="Help",
             description=f"Help for SabaRadio {emoji("sabapray")}",
+            color=0x05B0FF,
         )
         .add_field(
             name="Commands",
@@ -59,6 +58,7 @@ def about_embed():
         discord.Embed(
             title="About",
             description=f"About SabaRadio {emoji("Saba_Hug")}",
+            color=0x05B0FF,
         )
         .add_field(
             name="Summary",
@@ -88,6 +88,7 @@ def stats_embed(servers: int, ping: int):
         discord.Embed(
             title="Statistics",
             description=f"SabaRadio Bot Statistics {emoji("Saba_Blush")}",
+            color=0x05B0FF,
         )
         .add_field(
             name="Server Count",
@@ -96,7 +97,7 @@ def stats_embed(servers: int, ping: int):
         )
         .add_field(
             name="Ping",
-            value=ping,
+            value=f"{ping}ms",
             inline=False,
         )
         .set_footer(

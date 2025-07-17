@@ -1,10 +1,10 @@
 import util.config
 import util.embeds
+import util.helpers
 import discord
 from discord.ext import commands
 from mutagen.mp3 import MP3
 from random import shuffle
-from util.helpers import bar
 import asyncio
 import time
 import os
@@ -61,6 +61,10 @@ class Music(commands.Cog):
             voice_client = await voice_channel.connect()
             self.vcs[ctx.guild.id] = voice_client
 
+        await ctx.guild.change_voice_state(
+            channel=voice_channel, self_mute=False, self_deaf=True
+        )
+
         files = [
             os.path.join(util.config.music, f)
             for f in os.listdir(util.config.music)
@@ -84,7 +88,7 @@ class Music(commands.Cog):
 
         await ctx.respond(
             embed=util.embeds.success_embed(
-                f"Joined `{voice_channel.name}` and started playing music!"
+                "Success", f"Joined <#{voice_channel.id}> and started playing music!"
             )
         )
 
@@ -133,11 +137,13 @@ class Music(commands.Cog):
         elapsed = time.time() - start
         elapsed = min(elapsed, duration)
 
-        progress = bar(elapsed, duration)
+        progress = util.helpers.bar(elapsed, duration)
         file = os.path.basename(track)
 
         await ctx.respond(
-            embed=util.embeds.success_embed(f"Now playing: **{file}**").add_field(
+            embed=util.embeds.success_embed(
+                "Status", f"Now playing: **{file}**"
+            ).add_field(
                 name="Progress",
                 value=progress,
             )
@@ -156,7 +162,7 @@ class Music(commands.Cog):
         filenames = [os.path.basename(f) for f in queue]
 
         await ctx.respond(
-            embed=util.embeds.success_embed("").add_field(
+            embed=util.embeds.success_embed("Queue", "").add_field(
                 name="Current Queue",
                 value="\n".join(
                     (
@@ -170,7 +176,11 @@ class Music(commands.Cog):
         )
 
     @discord.slash_command(name="volume", description="Change volume of SabaRadio")
-    async def volume(self, ctx: discord.ApplicationContext, volume: int):
+    async def volume(
+        self,
+        ctx: discord.ApplicationContext,
+        volume: discord.Option(int, "Percentage volume of SabaRadio from 1-200%"),  # type: ignore
+    ):
         if not ctx.voice_client:
             return await ctx.respond(
                 embed=util.embeds.error_embed(
@@ -192,7 +202,9 @@ class Music(commands.Cog):
             self.volumes[ctx.guild.id] = new_volume
 
             await ctx.respond(
-                embed=util.embeds.success_embed(f"Volume set to {new_volume * 100.0}%")
+                embed=util.embeds.success_embed(
+                    "Success", f"Volume set to {new_volume * 100.0}%"
+                )
             )
         else:
             return await ctx.respond(
@@ -212,7 +224,7 @@ class Music(commands.Cog):
 
         await ctx.respond(
             embed=util.embeds.success_embed(
-                f"Disconnected from `{ctx.author.voice.channel}`!"
+                "Success", f"Disconnected from <#{ctx.author.voice.channel.id}>!"
             )
         )
 
