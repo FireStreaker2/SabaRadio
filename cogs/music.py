@@ -23,6 +23,8 @@ class Music(commands.Cog):
         self.pauses = {}
         self.elapsed = {}
 
+        self.admin_only = {}
+
     @commands.Cog.listener()
     async def on_voice_state_update(
         self,
@@ -64,6 +66,13 @@ class Music(commands.Cog):
 
     @discord.slash_command(name="start", description="Join vc and start playing music")
     async def start(self, ctx: discord.ApplicationContext):
+        if self.admin_only.get(ctx.guild.id, False):
+            if not ctx.author.guild_permissions.administrator:
+                return await ctx.respond(
+                    embed=util.embeds.error_embed("Only admins can use this command."),
+                    ephemeral=True,
+                )
+
         if not ctx.author.voice or not ctx.author.voice.channel:
             return await ctx.respond(
                 embed=util.embeds.error_embed(
@@ -218,6 +227,13 @@ class Music(commands.Cog):
         ctx: discord.ApplicationContext,
         volume: discord.Option(int, "Percentage volume of SabaRadio from 1-200%"),  # type: ignore
     ):
+        if self.admin_only.get(ctx.guild.id, False):
+            if not ctx.author.guild_permissions.administrator:
+                return await ctx.respond(
+                    embed=util.embeds.error_embed("Only admins can use this command."),
+                    ephemeral=True,
+                )
+
         if not ctx.voice_client:
             return await ctx.respond(
                 embed=util.embeds.error_embed(
@@ -251,6 +267,13 @@ class Music(commands.Cog):
 
     @discord.slash_command(name="disconnect", description="Disconnect SabaRadio")
     async def disconnect(self, ctx: discord.ApplicationContext):
+        if self.admin_only.get(ctx.guild.id, False):
+            if not ctx.author.guild_permissions.administrator:
+                return await ctx.respond(
+                    embed=util.embeds.error_embed("Only admins can use this command."),
+                    ephemeral=True,
+                )
+
         if not ctx.voice_client:
             return await ctx.respond(
                 embed=util.embeds.error_embed("Not currently connected!"),
@@ -288,6 +311,23 @@ class Music(commands.Cog):
         task = self.tasks.pop(guild, None)
         if task and not task.done():
             task.cancel()
+
+    @discord.slash_command(
+        name="toggleadmin",
+        description="Only allow administrators to initialize SabaRadio",
+    )
+    @commands.has_permissions(administrator=True)
+    async def toggleadmin(self, ctx: discord.ApplicationContext):
+        current = self.admin_only.get(ctx.guild.id, False)
+        self.admin_only[ctx.guild.id] = not current
+
+        await ctx.respond(
+            embed=util.embeds.success_embed(
+                "Success",
+                f"Admin-only mode has been **{'enabled' if not current else 'disabled'}** for select commands",
+            ),
+            ephemeral=True,
+        )
 
 
 def setup(bot: commands.Bot):
