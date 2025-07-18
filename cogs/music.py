@@ -13,6 +13,7 @@ import os
 class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.tasks = {}
         self.vcs = {}
         self.queues = {}
         self.is_playing = {}
@@ -30,22 +31,17 @@ class Music(commands.Cog):
         after: discord.VoiceState,
     ):
         if member.id == self.bot.user.id:
-            if before.channel is not None and after.channel is None:
-                guild = before.channel.guild.id
-
-                self.vcs.pop(guild, None)
-                self.queues.pop(guild, None)
-                self.is_playing.pop(guild, None)
-                self.volumes.pop(guild, None)
-                self.current.pop(guild, None)
-                self.start.pop(guild, None)
-                self.pauses.pop(guild, None)
-                self.elapsed.pop(guild, None)
-
+            if (
+                before.channel is not None
+                and after.channel is None
+                and not member.guild.voice_client
+            ):
+                self.reset(before.channel.guild.id)
             return
 
         for guild, voice_client in self.vcs.items():
             if not voice_client or not voice_client.is_connected():
+                self.reset(guild)
                 continue
 
             vc = voice_client.channel
@@ -77,20 +73,19 @@ class Music(commands.Cog):
             )
 
         voice_channel = ctx.author.voice.channel
-        if ctx.guild.id in self.vcs:
-            voice_client = self.vcs[ctx.guild.id]
-
-            if voice_client.channel == voice_channel:
+        voice_client = ctx.guild.voice_client
+        if voice_client:
+            if voice_client.channel != voice_channel:
+                await voice_client.move_to(voice_channel)
+            else:
                 return await ctx.respond(
                     embed=util.embeds.error_embed("I'm already in your voice channel!"),
                     ephemeral=True,
                 )
-
-            if voice_client.channel != voice_channel:
-                await voice_client.move_to(voice_channel)
         else:
             voice_client = await voice_channel.connect()
-            self.vcs[ctx.guild.id] = voice_client
+
+        self.vcs[ctx.guild.id] = voice_client
 
         await ctx.guild.change_voice_state(
             channel=voice_channel, self_mute=False, self_deaf=True
@@ -115,7 +110,12 @@ class Music(commands.Cog):
         self.is_playing[ctx.guild.id] = True
         self.volumes.setdefault(ctx.guild.id, 1.0)
 
-        asyncio.create_task(self.play(ctx.guild.id))
+        existing = self.tasks.get(ctx.guild.id)
+        if existing and not existing.done():
+            existing.cancel()
+
+        task = asyncio.create_task(self.play(ctx.guild.id))
+        self.tasks[ctx.guild.id] = task
 
         await ctx.respond(
             embed=util.embeds.success_embed(
@@ -253,27 +253,41 @@ class Music(commands.Cog):
     async def disconnect(self, ctx: discord.ApplicationContext):
         if not ctx.voice_client:
             return await ctx.respond(
-                embed=util.embeds.error_embed(
-                    "You need to be in a voice channel first!"
-                ),
+                embed=util.embeds.error_embed("Not currently connected!"),
                 ephemeral=True,
             )
 
-        self.vcs.pop(ctx.guild.id, None)
-        self.queues.pop(ctx.guild.id, None)
-        self.is_playing.pop(ctx.guild.id, None)
-        self.volumes.pop(ctx.guild.id, None)
-        self.current.pop(ctx.guild.id, None)
-        self.start.pop(ctx.guild.id, None)
-        self.pauses.pop(ctx.guild.id, None)
-        self.elapsed.pop(ctx.guild.id, None)
+        if (
+            not ctx.author.voice
+            or not ctx.author.voice.channel
+            or ctx.author.voice.channel != ctx.voice_client.channel
+        ):
+            return await ctx.respond(
+                embed=util.embeds.error_embed("You must be in the same vc!"),
+                ephemeral=True,
+            )
 
+        self.reset(ctx.guild.id)
         await ctx.respond(
             embed=util.embeds.success_embed(
                 "Success", f"Disconnected from <#{ctx.voice_client.channel.id}>!"
             )
         )
         await ctx.voice_client.disconnect()
+
+    def reset(self, guild: int):
+        self.vcs.pop(guild, None)
+        self.queues.pop(guild, None)
+        self.is_playing.pop(guild, None)
+        self.volumes.pop(guild, None)
+        self.current.pop(guild, None)
+        self.start.pop(guild, None)
+        self.pauses.pop(guild, None)
+        self.elapsed.pop(guild, None)
+
+        task = self.tasks.pop(guild, None)
+        if task and not task.done():
+            task.cancel()
 
 
 def setup(bot: commands.Bot):
