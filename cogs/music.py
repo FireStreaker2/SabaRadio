@@ -6,6 +6,7 @@ from discord.ext import commands
 from mutagen.mp3 import MP3
 from random import shuffle
 from time import time
+from math import ceil
 import asyncio
 import os
 
@@ -207,19 +208,26 @@ class Music(commands.Cog):
 
         filenames = [os.path.basename(f) for f in queue]
 
-        await ctx.respond(
-            embed=util.embeds.success_embed("Queue", "").add_field(
-                name="Current Queue",
-                value="\n".join(
-                    (
-                        f"{i+1}. **{name}**"
-                        if name == os.path.basename(self.current.get(ctx.guild.id, ""))
-                        else f"{i+1}. {name}"
-                    )
-                    for i, name in enumerate(filenames)
-                ),
+        embeds = []
+        for page_num in range(0, len(filenames), 10):
+            chunk = filenames[page_num : page_num + 10]
+            page_content = "\n".join(
+                (
+                    f"{i+1+page_num}. **{name}**"
+                    if name == os.path.basename(self.current.get(ctx.guild.id, ""))
+                    else f"{i+1+page_num}. {name}"
+                )
+                for i, name in enumerate(chunk)
             )
-        )
+
+            embed = util.embeds.success_embed(
+                "Queue", "", f"{ceil((page_num+1)/10)}/{ceil(len(filenames)/10)}"
+            ).add_field(name="Current Queue", value=page_content or "No songs")
+            embeds.append(embed)
+
+        await ctx.respond(embed=embeds[0])
+        for embed in embeds[1:]:
+            await ctx.channel.send(embed=embed)
 
     @discord.slash_command(name="volume", description="Change volume of SabaRadio")
     async def volume(

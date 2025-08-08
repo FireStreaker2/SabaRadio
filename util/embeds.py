@@ -21,7 +21,7 @@ def error_embed(message: str):
     )
 
 
-def success_embed(title: str, message: str):
+def success_embed(title: str, message: str, page: str = ""):
     return (
         discord.Embed(
             title=title,
@@ -29,7 +29,7 @@ def success_embed(title: str, message: str):
             color=color,
         )
         .set_footer(
-            text="SabaRadio",
+            text=f"SabaRadio {page}",
             icon_url=images["pfp"],
         )
         .set_thumbnail(url=images["pfp"])
